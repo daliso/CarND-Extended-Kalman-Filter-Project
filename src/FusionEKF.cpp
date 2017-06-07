@@ -23,14 +23,13 @@ FusionEKF::FusionEKF() {
   Hj_ = MatrixXd(3, 4);
 
   //measurement covariance matrix - laser
-  R_laser_ << 0.0225, 0,
-        0, 0.0225;
+    R_laser_ << 0.0225, 0,
+    0, 0.0225;
 
   //measurement covariance matrix - radar
-  R_radar_ << 0.09, 0, 0,
-        0, 0.0009, 0,
-        0, 0, 0.09;
-
+    R_radar_ << 0.09, 0, 0,
+    0, 0.0009, 0,
+    0, 0, 0.09;
   /**
   TODO:
     * Finish initializing the FusionEKF.
@@ -75,14 +74,14 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
       */
         float ro = measurement_pack.raw_measurements_[0];
         float phi = measurement_pack.raw_measurements_[1];
-        x_in << ro*cos(phi), ro*sin(phi), 1, 0.5;
+        x_in << ro*cos(phi), ro*sin(phi), 5.2, 0;
         
     }
     else if (measurement_pack.sensor_type_ == MeasurementPackage::LASER) {
       /**
       Initialize state.
       */
-        x_in << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 1, 0.5;
+        x_in << measurement_pack.raw_measurements_[0], measurement_pack.raw_measurements_[1], 5.2, 0;
         
     }
       
@@ -143,18 +142,17 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
     0, 0, 1, 0,
     0, 0, 0, 1;
     
-    //2. Set the process covariance matrix Q
-    float dt2 = dt * dt;
-    float dt3 = dt * dt * dt;
-    float dt4 = dt * dt * dt * dt;
+    float dt_2 = dt * dt;
+    float dt_3 = dt_2 * dt;
+    float dt_4 = dt_3 * dt;
+
     
+    //set the process covariance matrix Q
     ekf_.Q_ = MatrixXd(4, 4);
-    ekf_.Q_ << dt4/4*noise_ax, 0, dt3/2*noise_ax, 0,
-    0, dt4/4*noise_ay, 0, dt3/2*noise_ay,
-    dt3/2*noise_ax, 0, dt2*noise_ax, 0,
-    0, dt3/2*noise_ay, 0, dt2*noise_ay;
-    
-    
+    ekf_.Q_ <<  dt_4/4*noise_ax, 0, dt_3/2*noise_ax, 0,
+    0, dt_4/4*noise_ay, 0, dt_3/2*noise_ay,
+    dt_3/2*noise_ax, 0, dt_2*noise_ax, 0,
+    0, dt_3/2*noise_ay, 0, dt_2*noise_ay;
 
   ekf_.Predict();
 
@@ -170,14 +168,20 @@ void FusionEKF::ProcessMeasurement(const MeasurementPackage &measurement_pack) {
 
   if (measurement_pack.sensor_type_ == MeasurementPackage::RADAR) {
     // Radar updates
-     ekf_.UpdateEKF(measurement_pack.raw_measurements_);
+      ekf_.R_ = R_radar_;
+      ekf_.H_ = tools.CalculateJacobian(ekf_.x_);
+      
+      ekf_.UpdateEKF(measurement_pack.raw_measurements_);
       
   } else {
     // Laser updates
+      ekf_.R_ = R_laser_;
+      ekf_.H_ = H_laser_;
+      
       ekf_.Update(measurement_pack.raw_measurements_);
   }
 
   // print the output
-  cout << "x_ = " << ekf_.x_ << endl;
-  cout << "P_ = " << ekf_.P_ << endl;
+//  cout << "x_ = " << ekf_.x_ << endl;
+//  cout << "P_ = " << ekf_.P_ << endl;
 }
