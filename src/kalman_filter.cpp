@@ -2,8 +2,6 @@
 #include "tools.h"
 #include "math.h"
 
-#include <iostream>
-
 using namespace std;
 using Eigen::MatrixXd;
 using Eigen::VectorXd;
@@ -58,14 +56,6 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   TODO:
     * update the state by using Extended Kalman Filter equations
   */
-    float ro_ = z[0];
-    float phi_ = z[1];
-    float ro_dot_ = z[2];
-    
-    VectorXd z_ = VectorXd(3);
-    
-    z_ << ro_,phi_,ro_dot_;
-    
 
     float px = x_[0];
     float py = x_[1];
@@ -80,7 +70,7 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
     VectorXd z_pred = VectorXd(3);
     z_pred << ro, phi, ro_dot;
     
-    VectorXd y = z_ - z_pred;
+    VectorXd y = z - z_pred;
     
     while(y[1] > M_PI){
         y[1] = y[1] - (2*M_PI);
